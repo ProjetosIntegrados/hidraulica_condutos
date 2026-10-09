@@ -1,0 +1,23 @@
+[tool.poetry]
+name = "nome_do_projeto"
+version = "0.1.0"
+description = ""
+authors = ["Nome do Autor <email@example.com>"]
+license = "MIT"
+readme = "README.md"
+packages = [{ include = "nome_do_projeto", from = "src" }]
+
+[tool.poetry.dependencies]
+python = ">=3.11,<3.14"
+
+[tool.poetry.group.dev.dependencies]
+pytest = ">=8,<9"
+ipykernel = ">=6,<7"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
+
