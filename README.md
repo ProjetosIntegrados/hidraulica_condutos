@@ -44,7 +44,7 @@ poetry run pytest
 ```text
 .
 ├── src/
-│   └── nome_do_projeto/
+│   └── hidraulica_condutos/
 ├── tests/
 ├── exemplos/
 ├── docs/
