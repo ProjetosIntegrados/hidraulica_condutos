@@ -324,7 +324,7 @@ def problema_tipo_7(diametro_mm, perda_unitaria, rugosidade_mm,
 # ============================================================
 
 def problema_tipo_1(vazao_ls, perda_unitaria, rugosidade_mm,
-                    temperatura):
+                    temperatura, registrar_iteracoes=False):
     """
     Resolve o problema tipo 1 da Aula 7.
 
@@ -390,7 +390,9 @@ def problema_tipo_1(vazao_ls, perda_unitaria, rugosidade_mm,
             "Não foi possível encontrar o diâmetro "
             "dentro dos limites de cálculo."
         )
-
+    # Lista que armazenará as tentativas do dimensionamento.
+    # Cada registro contém o diâmetro, J calculado e o erro.
+    historico_iteracoes = []
     # 6. Aplicamos o método da bisseção.
     #
     # A cada tentativa, testamos o diâmetro intermediário
@@ -402,7 +404,19 @@ def problema_tipo_1(vazao_ls, perda_unitaria, rugosidade_mm,
         ) / 2
 
         j_calculado = calcular_j(diametro)
+        # Calculamos o erro relativo da perda de carga.
+        erro_percentual = (
+            abs(j_calculado - perda_unitaria)
+            / perda_unitaria
+        ) * 100
 
+        # Guardamos os resultados desta tentativa.
+        historico_iteracoes.append({
+            "iteracao": len(historico_iteracoes) + 1,
+            "diametro_mm": diametro * 1000,
+            "j_calculado": j_calculado,
+            "erro_percentual": erro_percentual,
+        })
         # Se J calculado for maior que o desejado,
         # precisamos aumentar o diâmetro.
         if j_calculado > perda_unitaria:
@@ -430,4 +444,11 @@ def problema_tipo_1(vazao_ls, perda_unitaria, rugosidade_mm,
     diametro_mm = diametro * 1000
 
     # 10. Retornamos os resultados.
+        # Quando solicitado, retornamos também as iterações
+    # para apresentar no memorial de cálculo.
+    if registrar_iteracoes:
+        return diametro_mm, velocidade_media, historico_iteracoes
+
+    # Mantemos o retorno original para não afetar
+    # os testes e outras partes do programa.
     return diametro_mm, velocidade_media
