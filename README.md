@@ -15,7 +15,7 @@ Por exemplo:
 
 ```bash
 poetry install
-pip install matplotlib
+install matplotlib
 ````
 
 ## Uso
