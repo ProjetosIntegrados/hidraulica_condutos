@@ -46,7 +46,12 @@ poetry run pytest
 .
 ├── src/
 │   └── hidraulica_condutos/
+│       ├── __init__.py/        
+│       ├── calculos.py/         #Adiciona interface gráfica e memorial de cálculo
+│       ├── interface.py/        #Interface para inserção de dados
+│       └── main.py/             #Implementa cálculos hidráulicos dos tipos 1 e 7
 ├── tests/
+│   └── test_calculos.py         #Testes automatizados conforme exemplos de aula
 ├── exemplos/
 ├── docs/
 ├── README.md
