@@ -26,10 +26,6 @@ O usuário deverá inserir os dados disponíveis do problema, e o programa será
 # Exemplo de uso
 ```
 
-## Exemplos
-
-Descreva ou indique os exemplos disponíveis no diretório [`exemplos/`](exemplos/).
-
 ## Testes
 
 Os testes automatizados estão no diretório [`tests/`](tests/).
@@ -61,7 +57,7 @@ poetry run pytest
 
 ## Desenvolvimento
 
-Descreva informações relevantes para desenvolver, modificar ou contribuir com o projeto.
+O desenvolvimento do projeto priorizou a criação de uma ferramenta computacional capaz de automatizar a resolução dos nove tipos de problemas de hidráulica, identificando as incógnitas e aplicando as equações adequadas para cada situação. Para isso, é necessário implementar os métodos de cálculo, incluindo processos iterativos, validação dos dados de entrada e apresentação dos resultados por meio de um memorial de cálculo e de uma representação visual do sistema hidráulico. Além disso, a ferramenta possuirá uma interface intuitiva e didática, adequada aos estudantes de Engenharia Civil, e uma estrutura modular que facilite futuras modificações e ampliações para a análise de sistemas hidráulicos mais complexos.
 
 ## Autores
 
