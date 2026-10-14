@@ -141,8 +141,18 @@ class InterfaceCondutos:
             highlightthickness=0,
         )
         self.desenho.pack(fill="x")
-        self.desenhar_reservatorios()
-
+        self.desenhar_reservatorios()   
+        # Botão para copiar o memorial.
+        copiar = ttk.Button(
+            direita,
+            text="COPIAR MEMORIAL",
+            command=self.copiar_memorial,
+        )
+        copiar.pack(
+            side="top",
+            anchor="e",
+            pady=(8, 4),
+        )
         # Área do memorial de cálculo.
         memorial_frame = ttk.LabelFrame(
             direita, text="Memorial de cálculo", padding=8
@@ -168,13 +178,7 @@ class InterfaceCondutos:
         rolagem.pack(side="right", fill="y")
         self.memorial.configure(yscrollcommand=rolagem.set)
 
-        # Botão para copiar o memorial.
-        copiar = ttk.Button(
-            direita,
-            text="COPIAR MEMORIAL",
-            command=self.copiar_memorial,
-        )
-        copiar.pack(anchor="e", pady=8)
+
 
     def adicionar_campo(self, quadro, chave, descricao):
         """Cria um campo de entrada e o registra pelo nome."""
