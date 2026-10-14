@@ -72,7 +72,7 @@ Descreva informações relevantes para desenvolver, modificar ou contribuir com 
 
 ## Referências
 
-Liste as normas, livros, artigos, documentação, códigos ou outras fontes utilizadas no desenvolvimento do projeto.
+Os arquivos utilizados de apoio para o desenvolvimento do projeto foram os slides e material de aula da professora Ana e do professor Manica.
 
 ## Licença
 
