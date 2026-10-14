@@ -2,8 +2,10 @@
 name = "hidraulica_condutos"
 version = "0.1.0"
 description = "Ferramenta para análise e dimensionamento de condutos em instalações hidráulicas."
-authors = ["Diana Pereira Couto <diana.couto@ufrgs.com.br>"
-            "Lucas da Silva Balensiefer <lucasbalensiefer2003@gmail.com>"]
+authors = [
+    "Diana Pereira Couto <diana.couto@ufrgs.com.br>",
+    "Lucas da Silva Balensiefer <lucasbalensiefer2003@gmail.com>"
+]
 license = "MIT"
 readme = "README.md"
 packages = [{ include = "hidraulica_condutos", from = "src" }]
