@@ -1,0 +1,54 @@
+
+# ============================================================
+# VERIFICAÇÃO AUTOMÁTICA DO PROJETO HIDRÁULICO
+#
+# Confere a sintaxe dos arquivos Python e executa
+# os testes funcionais sempre que houver alterações.
+# ============================================================
+
+name: Verificacao do programa hidraulico
+
+# Define quando a verificacao sera executada.
+on:
+  push:
+    branches:
+      - melhorias-execucao-testes
+      - main
+
+  pull_request:
+    branches:
+      - main
+
+  workflow_dispatch:
+
+# Os testes precisam apenas ler o repositorio.
+permissions:
+  contents: read
+
+jobs:
+  verificar:
+    name: Compilacao e testes
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Baixa o codigo do repositorio.
+      - name: Obter codigo
+        uses: actions/checkout@v7
+
+      # 2. Configura a versao do Python.
+      - name: Configurar Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+
+      # 3. Instala o projeto e o Pytest.
+      - name: Instalar dependencias
+        run: python -m pip install -e . "pytest>=8,<9"
+
+      # 4. Verifica erros de sintaxe dos arquivos.
+      - name: Verificar compilacao
+        run: python -m compileall -q src tests executar.py executar_terminal.py
+
+      # 5. Executa os testes funcionais existentes.
+      - name: Executar testes
+        run: python -m pytest -v
