@@ -59,16 +59,21 @@ def test_problema_tipo_1():
     """
 
     # Executamos a rotina com os dados do professor.
-    diametro, velocidade_media = problema_tipo_1(
+    diametro, velocidade_media, historico = problema_tipo_1(
         vazao_ls=47.1,
         perda_unitaria=16 / 1104,
         rugosidade_mm=0.06,
         temperatura=25,
+        registrar_iteracoes=True,
     )
 
     # Conferimos o diâmetro com tolerância de 1 mm,
     # considerando o arredondamento da aula.
     assert abs(diametro - 184) < 1
+
+    # Com o intervalo inicial do programa, a tolerância de 0,1 mm
+    # é atingida na 17ª divisão do intervalo.
+    assert len(historico) == 17
 
     # Conferimos se a velocidade calculada é positiva.
     assert velocidade_media > 0

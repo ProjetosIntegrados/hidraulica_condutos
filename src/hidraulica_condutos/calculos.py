@@ -1,454 +1,376 @@
+"""Cálculos hidráulicos para condutos simples sob pressão.
+
+Unidades internas: m, m³/s, m/s e m²/s.
+Referência: Aula 7 da disciplina de Hidráulica.
+"""
 
 import math
 
-# ============================================================
-# PROJETO: CÁLCULO DE CONDUTOS SOB PRESSÃO
-# MÓDULO: CÁLCULOS HIDRÁULICOS
-#
-# Este arquivo reúne as equações fundamentais utilizadas
-# na resolução dos problemas de condutos simples.
-#
-# Referência: Aula 7 - Rotina de cálculo de condutos simples
-# ============================================================
+GRAVIDADE = 9.806  # m/s²
+TOLERANCIA_DIAMETRO_MM = 0.1
+DIAMETRO_MINIMO_M = 0.001
+DIAMETRO_MAXIMO_M = 10.0
 
-
-# Aceleração da gravidade em m/s².
-# Foi adotado o mesmo valor utilizado nos exemplos da aula.
-GRAVIDADE = 9.806
-
-
-# ============================================================
-# 1. CONVERSÃO DE UNIDADES
-# ============================================================
 
 def mm_para_m(valor_mm):
-    """
-    Converte uma medida de milímetros para metros.
-
-    A conversão é necessária porque as equações hidráulicas
-    trabalham com as unidades do Sistema Internacional (SI).
-    """
-
-    # Um metro corresponde a 1000 milímetros.
+    """Converte milímetros em metros."""
     return valor_mm / 1000
 
 
 def litros_para_m3(vazao_ls):
-    """
-    Converte uma vazão de litros por segundo para m³/s.
-    """
-
-    # Um metro cúbico corresponde a 1000 litros.
+    """Converte L/s em m³/s."""
     return vazao_ls / 1000
 
 
-# ============================================================
-# 2. VISCOSIDADE CINEMÁTICA DA ÁGUA
-# ============================================================
-
 def viscosidade_agua(temperatura):
-    """
-    Calcula a viscosidade cinemática da água em função
-    da temperatura, conforme a equação da Aula 7.
-
-    Entrada:
-        temperatura: temperatura da água em °C
-
-    Saída:
-        viscosidade cinemática em m²/s
-    """
-
-    # A temperatura influencia a viscosidade da água.
-    # Esta equação permite calcular a viscosidade sem
-    # precisar consultar uma tabela para cada temperatura.
-
+    """Calcula a viscosidade cinemática da água (m²/s), conforme a Aula 7."""
     viscosidade = 1.78e-6 / (
         1 + 0.0337 * temperatura + 0.000221 * temperatura**2
     )
-
+    if not math.isfinite(viscosidade) or viscosidade <= 0:
+        raise ValueError("A temperatura não produziu uma viscosidade positiva e finita.")
     return viscosidade
 
 
-# ============================================================
-# 3. EQUAÇÃO DA CONTINUIDADE
-# ============================================================
-
 def area_conduto(diametro):
-    """
-    Calcula a área da seção transversal de um tubo circular.
-
-    Equação:
-        A = pi * D² / 4
-
-    Entrada:
-        diametro: diâmetro interno do tubo em metros
-
-    Saída:
-        área em m²
-    """
-
-    area = math.pi * diametro**2 / 4
-
-    return area
+    """Área interna do tubo circular (m²): A = πD²/4."""
+    return math.pi * diametro**2 / 4
 
 
 def velocidade(vazao, diametro):
-    """
-    Calcula a velocidade média do escoamento.
+    """Velocidade média (m/s) pela continuidade: V = Q/A."""
+    return vazao / area_conduto(diametro)
 
-    Pela equação da continuidade:
-        Q = A * V
-
-    Isolando a velocidade:
-        V = Q / A
-
-    Entradas:
-        vazao: vazão em m³/s
-        diametro: diâmetro interno em metros
-
-    Saída:
-        velocidade em m/s
-    """
-
-    # Calculamos primeiro a área do tubo.
-    area = area_conduto(diametro)
-
-    # Dividimos a vazão pela área para obter a velocidade.
-    velocidade_media = vazao / area
-
-    return velocidade_media
-
-
-# ============================================================
-# 4. NÚMERO DE REYNOLDS
-# ============================================================
 
 def reynolds(velocidade_media, diametro, viscosidade):
-    """
-    Calcula o número de Reynolds do escoamento.
+    """Número de Reynolds: Re = V D / ν."""
+    return velocidade_media * diametro / viscosidade
 
-    Equação:
-        Re = V * D / viscosidade
-
-    O número de Reynolds é adimensional e permite
-    identificar o regime de escoamento.
-
-    Conforme a Aula 7:
-        Re < 2000: escoamento laminar
-        Re > 4000: escoamento turbulento
-
-    A faixa intermediária exige tratamento específico.
-    """
-
-    numero_reynolds = (
-        velocidade_media * diametro / viscosidade
-    )
-
-    return numero_reynolds
-
-
-# ============================================================
-# 5. EQUAÇÃO DE DARCY-WEISBACH
-# ============================================================
 
 def perda_carga_unitaria(fator_atrito, velocidade_media, diametro):
-    """
-    Calcula a perda de carga unitária do conduto.
-
-    Equação:
-        J = f * V² / (D * 2 * g)
-
-    Entradas:
-        fator_atrito: fator de perda de carga linear
-        velocidade_media: velocidade em m/s
-        diametro: diâmetro interno em metros
-
-    Saída:
-        J: perda de carga unitária em m/m
-    """
-
-    # O fator de atrito representa a resistência hidráulica
-    # associada ao escoamento dentro da tubulação.
-    #
-    # A velocidade aparece elevada ao quadrado:
-    # quanto maior a velocidade, maior tende a ser a perda.
-
-    J = (
-        fator_atrito * velocidade_media**2
-        / (diametro * 2 * GRAVIDADE)
-    )
-
-    return J
+    """Darcy-Weisbach: J = f V² / (2 g D), em m/m."""
+    return fator_atrito * velocidade_media**2 / (diametro * 2 * GRAVIDADE)
 
 
-# ============================================================
-# 6. FATOR DE ATRITO - COLEBROOK-WHITE
-# ============================================================
+def _registrar(memorial, linha):
+    """Acrescenta uma etapa ao memorial solicitado pelo chamador."""
+    if memorial is not None:
+        memorial.append(linha)
 
-def fator_atrito(re, diametro, rugosidade):
-    """
-    Calcula o fator de perda de carga linear (f).
 
-    Entradas:
-        re: número de Reynolds
-        diametro: diâmetro interno em metros
-        rugosidade: rugosidade absoluta em metros
+def fator_atrito(re, diametro, rugosidade, *, memorial=None):
+    """Calcula f pela expressão laminar ou pela iteração de Colebrook-White."""
+    if re <= 0 or diametro <= 0 or not 0 <= rugosidade < diametro:
+        raise ValueError("O diâmetro e Re devem ser positivos, com 0 ≤ ε < D.")
 
-    Para escoamento laminar:
-        f = 64 / Re
-
-    Para escoamento turbulento:
-        utiliza a equação de Colebrook-White.
-
-    Como Colebrook-White é uma equação implícita,
-    o fator f é calculado por tentativas sucessivas.
-    """
-
-    # Verificamos se os valores fornecidos são fisicamente
-    # válidos antes de iniciar os cálculos.
-    if re <= 0 or diametro <= 0 or rugosidade < 0:
-        raise ValueError("Parâmetros hidráulicos inválidos.")
-
-    # Para escoamento laminar, o fator depende apenas
-    # do número de Reynolds.
     if re < 2000:
-        return 64 / re
+        f = 64 / re
+        _registrar(memorial, f"f = 64 / Re = 64 / {re:.10g} = {f:.10g} (laminar)")
+        return f
 
-    # A Aula 7 apresenta a região entre 2000 e 4000
-    # separadamente. Por enquanto, não aplicaremos
-    # Colebrook-White automaticamente nessa faixa.
     if re <= 4000:
-        raise ValueError(
-            "Regime de transição entre laminar e turbulento: "
-            "o método ainda não foi definido."
-        )
+        raise ValueError("Regime de transição (2000 ≤ Re ≤ 4000) sem método definido.")
 
-    # Adotamos uma estimativa inicial para o fator de atrito.
-    # Esse valor será atualizado durante as iterações.
+    _registrar(
+        memorial,
+        "Colebrook-White: f_novo = [-2 log10(ε/(3,71 D) + 2,51/(Re √f))]⁻²",
+    )
+    _registrar(memorial, f"ε/(3,71 D) = {rugosidade:.10g}/(3,71 × {diametro:.10g}); Re = {re:.10g}")
     f = 0.02
-
-    # O programa realizará no máximo 100 tentativas.
-    for _ in range(100):
-
-        # Calculamos a expressão que aparece dentro
-        # do logaritmo da equação de Colebrook-White.
-        argumento = (
-            rugosidade / (3.71 * diametro)
-            + 2.51 / (re * math.sqrt(f))
-        )
-
-        # Aplicamos a equação de Colebrook-White para
-        # obter uma nova estimativa do fator de atrito.
+    _registrar(memorial, "Estimativa inicial f = 0,02; parada quando |f_novo − f| < 10⁻¹⁰.")
+    for iteracao in range(1, 101):
+        argumento = rugosidade / (3.71 * diametro) + 2.51 / (re * math.sqrt(f))
         novo_f = (-2 * math.log10(argumento)) ** -2
-
-        # Comparamos o novo valor com o valor anterior.
-        # Se a diferença for suficientemente pequena,
-        # consideramos que o cálculo convergiu.
+        if memorial is not None:
+            memorial.append(
+                f"  f, iteração {iteracao}: f anterior = {f:.10g}; "
+                f"f_novo = [-2 log10({argumento:.10g})]⁻² = {novo_f:.10g}"
+            )
         if abs(novo_f - f) < 1e-10:
             return novo_f
-
-        # Caso ainda não tenha convergido, utilizamos
-        # o novo valor como estimativa da próxima tentativa.
         f = novo_f
 
-    # Se as 100 tentativas não forem suficientes,
-    # informamos que o método não convergiu.
-    raise RuntimeError(
-        "O cálculo de Colebrook-White não convergiu."
-    )
+    raise RuntimeError("O cálculo de Colebrook-White não convergiu.")
 
-# ============================================================
-# 7. PROBLEMA TIPO 7 - VERIFICAÇÃO
-# ============================================================
 
-def problema_tipo_7(diametro_mm, perda_unitaria, rugosidade_mm,
-                    temperatura):
-    """
-    Resolve o problema tipo 7 da Aula 7.
-
-    Dados conhecidos:
-        D: diâmetro interno em mm
-        J: perda de carga unitária em m/m
-        ε: rugosidade absoluta em mm
-        T: temperatura da água em °C
-
-    Incógnitas:
-        V: velocidade média em m/s
-        Q: vazão em L/s
-
-    Referência: Aula 7, páginas 23 e 29.
-    """
-
-    # 1. Convertemos os dados para o Sistema Internacional.
+def problema_tipo_7(diametro_mm, perda_unitaria, rugosidade_mm, temperatura, *, memorial=None):
+    """Tipo 7: conhecidos D, J, ε e T; determina V (m/s) e Q (L/s)."""
     diametro = mm_para_m(diametro_mm)
     rugosidade = mm_para_m(rugosidade_mm)
-
-    # 2. Calculamos a viscosidade cinemática da água.
     viscosidade = viscosidade_agua(temperatura)
 
-    # 3. Verificamos se os dados hidráulicos são válidos.
-    if diametro <= 0 or perda_unitaria <= 0 or rugosidade < 0:
-        raise ValueError("Os dados do conduto são inválidos.")
+    if diametro <= 0 or perda_unitaria <= 0 or not 0 <= rugosidade < diametro:
+        raise ValueError("Informe D e J positivos, com 0 ≤ ε < D.")
 
-    # 4. Calculamos a expressão auxiliar sqrt(2*g*J*D).
-    # Ela aparece na equação explícita do problema tipo 7.
-    auxiliar = math.sqrt(
-        2 * GRAVIDADE * perda_unitaria * diametro
-    )
+    # Primeiro verifica se a solução explícita do regime laminar é aplicável.
+    v_laminar = GRAVIDADE * perda_unitaria * diametro**2 / (32 * viscosidade)
+    re_laminar = reynolds(v_laminar, diametro, viscosidade)
+    if re_laminar < 2000:
+        velocidade_media = v_laminar
+        _registrar(memorial,
+                   f"V = g J D²/(32ν) = {GRAVIDADE} × {perda_unitaria:.10g} × "
+                   f"{diametro:.10g}²/(32 × {viscosidade:.10g}) = {velocidade_media:.10g} m/s")
+        _registrar(memorial, f"Re = V D/ν = {re_laminar:.10g} (laminar)")
+    else:
+        auxiliar = math.sqrt(2 * GRAVIDADE * perda_unitaria * diametro)
+        termo_rugosidade = rugosidade / (3.71 * diametro)
+        termo_viscosidade = 2.51 * viscosidade / (diametro * auxiliar)
+        velocidade_media = -2 * auxiliar * math.log10(termo_rugosidade + termo_viscosidade)
+        re = reynolds(velocidade_media, diametro, viscosidade)
+        if re <= 4000:
+            raise ValueError("Os dados não produziram solução em regime laminar ou turbulento.")
 
-    # 5. Calculamos os dois termos dentro do logaritmo.
-    termo_rugosidade = rugosidade / (3.71 * diametro)
+        _registrar(memorial,
+                   f"U = √(2 g J D) = √(2 × {GRAVIDADE} × {perda_unitaria:.10g} × "
+                   f"{diametro:.10g}) = {auxiliar:.10g} m/s")
+        _registrar(memorial, "Colebrook-White e Darcy-Weisbach: V = −2 U log10(ε/(3,71 D) + 2,51ν/(D U))")
+        _registrar(memorial,
+                   f"V = −2 × {auxiliar:.10g} × log10({termo_rugosidade:.10g} + "
+                   f"{termo_viscosidade:.10g}) = {velocidade_media:.10g} m/s")
+        _registrar(memorial,
+                   f"Re = V D/ν = {velocidade_media:.10g} × {diametro:.10g}/"
+                   f"{viscosidade:.10g} = {re:.10g} (turbulento)")
 
-    termo_viscosidade = (
-        2.51 * viscosidade / (diametro * auxiliar)
-    )
+    if memorial is not None:
+        f = 2 * GRAVIDADE * diametro * perda_unitaria / velocidade_media**2
+        _registrar(memorial,
+                   f"f = 2 g D J/V² = 2 × {GRAVIDADE} × {diametro:.10g} × "
+                   f"{perda_unitaria:.10g}/{velocidade_media:.10g}² = {f:.10g}")
+    return velocidade_media, _vazao_pela_continuidade(diametro, velocidade_media, memorial)
 
-    # 6. Aplicamos a equação do tipo 7, apresentada
-    # na página 23 da aula, para obter a velocidade.
-    velocidade_media = (
-        -2 * auxiliar
-        * math.log10(termo_rugosidade + termo_viscosidade)
-    )
 
-    # 7. Pela continuidade, calculamos a vazão em m³/s.
-    vazao_m3s = area_conduto(diametro) * velocidade_media
+def _buscar_diametro(perda, j_alvo, inferior, superior, historico, memorial):
+    """Encontra D por bisseção em um intervalo onde J(D) é decrescente."""
+    if inferior > superior or not perda(inferior) >= j_alvo >= perda(superior):
+        raise ValueError("Sem solução turbulenta no intervalo de diâmetros. Confira os dados e o regime.")
 
-    # 8. Convertemos a vazão de m³/s para L/s.
-    vazao_ls = vazao_m3s * 1000
+    _registrar(memorial, f"Bisseção: D inicial entre {inferior * 1000:.10g} e {superior * 1000:.10g} mm.")
+    tolerancia = f"{TOLERANCIA_DIAMETRO_MM:g}".replace(".", ",")
+    _registrar(memorial, f"Alvo J = {j_alvo:.10g} m/m; largura final de até {tolerancia} mm.")
+    _registrar(memorial, "Em cada tentativa: D = (D inferior + D superior)/2.")
+    _registrar(memorial, "Se J(D) > J alvo, atualiza D inferior; nos demais casos, atualiza D superior.")
+    tolerancia_m = mm_para_m(TOLERANCIA_DIAMETRO_MM)
+    iteracao = 0
+    while superior - inferior > tolerancia_m:
+        diametro = (inferior + superior) / 2
+        j = perda(diametro)
+        iteracao += 1
+        if historico is not None or memorial is not None:
+            erro = abs(j - j_alvo) / j_alvo * 100
+            if historico is not None:
+                historico.append({
+                    "iteracao": iteracao, "diametro_mm": diametro * 1000,
+                    "j_calculado": j, "erro_percentual": erro,
+                })
+            _registrar(memorial,
+                       f"  D, iteração {iteracao}: {diametro * 1000:.10g} mm; J(D) = {j:.10g} m/m; "
+                       f"diferença relativa = {erro:.6g}%")
 
-    # 9. Retornamos os dois resultados para o programa.
-    return velocidade_media, vazao_ls
+        if j > j_alvo:
+            inferior = diametro
+        else:
+            superior = diametro
 
-# ============================================================
-# 8. PROBLEMA TIPO 1 - DIMENSIONAMENTO
-# ============================================================
+    diametro = (inferior + superior) / 2
+    _registrar(memorial,
+               f"D final = ({inferior * 1000:.10g} + {superior * 1000:.10g})/2 "
+               f"= {diametro * 1000:.10g} mm após {iteracao} iterações.")
+    return diametro
 
-def problema_tipo_1(vazao_ls, perda_unitaria, rugosidade_mm,
-                    temperatura, registrar_iteracoes=False):
-    """
-    Resolve o problema tipo 1 da Aula 7.
 
-    Dados conhecidos:
-        Q: vazão em L/s
-        J: perda de carga unitária em m/m
-        ε: rugosidade absoluta em mm
-        T: temperatura da água em °C
-
-    Incógnitas:
-        D: diâmetro interno em mm
-        V: velocidade média em m/s
-
-    Método:
-        Tentativas sucessivas para determinar o diâmetro.
-
-    Referência: Aula 7, páginas 21 e 27.
-    """
-
-    # 1. Verificamos se os dados fornecidos são válidos.
+def problema_tipo_1(
+    vazao_ls, perda_unitaria, rugosidade_mm, temperatura, registrar_iteracoes=False,
+    *, memorial=None,
+):
+    """Tipo 1: conhecidos Q, J, ε e T; determina D (mm) e V (m/s)."""
     if vazao_ls <= 0 or perda_unitaria <= 0 or rugosidade_mm < 0:
         raise ValueError("Os dados do conduto são inválidos.")
 
-    # 2. Convertemos as unidades para o Sistema Internacional.
     vazao = litros_para_m3(vazao_ls)
     rugosidade = mm_para_m(rugosidade_mm)
-
-    # 3. Calculamos a viscosidade cinemática da água.
     viscosidade = viscosidade_agua(temperatura)
+    historico = [] if registrar_iteracoes else None
 
-    # 4. Definimos uma função auxiliar.
-    # Para um diâmetro escolhido, ela calcula a perda
-    # de carga unitária correspondente à vazão informada.
-    def calcular_j(diametro):
+    # Para Q fixa, J laminar = 128νQ/(πgD⁴) e Re é inversamente proporcional a D.
+    diametro_laminar = (128 * viscosidade * vazao / (math.pi * GRAVIDADE * perda_unitaria)) ** 0.25
+    re_laminar = reynolds(velocidade(vazao, diametro_laminar), diametro_laminar, viscosidade)
+    if re_laminar < 2000:
+        diametro = diametro_laminar
+        if not DIAMETRO_MINIMO_M <= diametro <= DIAMETRO_MAXIMO_M or rugosidade >= diametro:
+            raise ValueError("Diâmetro fora dos limites de cálculo.")
+        _registrar(memorial,
+                   f"D = [128νQ/(πgJ)]^(1/4) = [128 × {viscosidade:.10g} × {vazao:.10g}/"
+                   f"(π × {GRAVIDADE} × {perda_unitaria:.10g})]^(1/4) = {diametro:.10g} m (laminar)")
+    else:
+        # Limita as tentativas a Re > 4000, evitando avaliar pontos de transição.
+        superior = min(DIAMETRO_MAXIMO_M, vazao / (1000 * math.pi * viscosidade) * (1 - 1e-12))
+        inferior = max(DIAMETRO_MINIMO_M, math.nextafter(rugosidade, math.inf))
 
-        # Pela continuidade, calculamos a velocidade.
-        velocidade_media = velocidade(vazao, diametro)
+        def perda(d):
+            return _calcular_j(velocidade(vazao, d), d, rugosidade_mm, temperatura)
 
-        # Calculamos o número de Reynolds.
-        re = reynolds(
-            velocidade_media, diametro, viscosidade
+        _registrar(memorial, "Em cada tentativa: A = πD²/4, V = Q/A, Re = VD/ν e J(D) = fV²/(2gD).")
+        diametro = _buscar_diametro(perda, perda_unitaria, inferior, superior, historico, memorial)
+
+    velocidade_media = _velocidade_pela_continuidade(vazao, diametro, memorial)
+    if memorial is not None:
+        memorial.append("Verificação da perda unitária no diâmetro final")
+        _calcular_j(velocidade_media, diametro, rugosidade_mm, temperatura, memorial)
+    if historico is not None:
+        return diametro * 1000, velocidade_media, historico
+    return diametro * 1000, velocidade_media
+
+
+def _vazao_pela_continuidade(diametro, velocidade_media, memorial):
+    area = area_conduto(diametro)
+    vazao = area * velocidade_media
+    _registrar(memorial, f"A = π D²/4 = π × {diametro:.10g}²/4 = {area:.10g} m²")
+    _registrar(memorial, f"Q = A V = {area:.10g} × {velocidade_media:.10g} = {vazao:.10g} m³/s = {vazao * 1000:.10g} L/s")
+    return vazao * 1000
+
+
+def _velocidade_pela_continuidade(vazao, diametro, memorial):
+    area = area_conduto(diametro)
+    velocidade_media = vazao / area
+    _registrar(memorial, f"A = π D²/4 = π × {diametro:.10g}²/4 = {area:.10g} m²")
+    _registrar(memorial, f"V = Q/A = {vazao:.10g}/{area:.10g} = {velocidade_media:.10g} m/s")
+    return velocidade_media
+
+
+def _diametro_pela_continuidade(vazao_ls, velocidade_media, memorial):
+    """Calcula D em metros pela relação D = √(4Q / (πV))."""
+    if velocidade_media <= 0 or vazao_ls <= 0:
+        raise ValueError("A velocidade e a vazão devem ser positivas.")
+
+    vazao = litros_para_m3(vazao_ls)
+    diametro = math.sqrt(4 * vazao / (math.pi * velocidade_media))
+    _registrar(memorial,
+               f"D = √(4Q/(πV)) = √(4 × {vazao:.10g}/(π × {velocidade_media:.10g})) "
+               f"= {diametro:.10g} m = {diametro * 1000:.10g} mm")
+    return diametro
+
+
+def _calcular_j(velocidade_media, diametro, rugosidade_mm, temperatura, memorial=None):
+    """Calcula J com V e D em unidades do SI."""
+    viscosidade = viscosidade_agua(temperatura)
+    re = reynolds(velocidade_media, diametro, viscosidade)
+    _registrar(memorial,
+               f"Re = V D/ν = {velocidade_media:.10g} × {diametro:.10g}/"
+               f"{viscosidade:.10g} = {re:.10g}")
+    f = fator_atrito(re, diametro, mm_para_m(rugosidade_mm), memorial=memorial)
+    j = perda_carga_unitaria(f, velocidade_media, diametro)
+    _registrar(memorial,
+               f"J = f V²/(2 g D) = {f:.10g} × {velocidade_media:.10g}²/"
+               f"(2 × {GRAVIDADE} × {diametro:.10g}) = {j:.10g} m/m")
+    return j
+
+
+def problema_tipo_2(velocidade_media, rugosidade_mm, vazao_ls, temperatura, *, memorial=None):
+    """Tipo 2: determina D (mm) e J (m/m) a partir de V, ε e Q."""
+    diametro = _diametro_pela_continuidade(vazao_ls, velocidade_media, memorial)
+    j = _calcular_j(velocidade_media, diametro, rugosidade_mm, temperatura, memorial)
+    return diametro * 1000, j
+
+
+def problema_tipo_5(diametro_mm, vazao_ls, rugosidade_mm, temperatura, *, memorial=None):
+    """Tipo 5: determina V (m/s) e J (m/m) a partir de D, Q e ε."""
+    if diametro_mm <= 0 or vazao_ls <= 0:
+        raise ValueError("O diâmetro e a vazão devem ser positivos.")
+
+    diametro = mm_para_m(diametro_mm)
+    velocidade_media = _velocidade_pela_continuidade(litros_para_m3(vazao_ls), diametro, memorial)
+    j = _calcular_j(velocidade_media, diametro, rugosidade_mm, temperatura, memorial)
+    return velocidade_media, j
+
+
+def problema_tipo_4(velocidade_media, perda_unitaria, rugosidade_mm, temperatura, *, memorial=None):
+    """Tipo 4: determina D (mm) e Q (L/s) a partir de V, J e ε."""
+    if velocidade_media <= 0 or perda_unitaria <= 0 or rugosidade_mm < 0:
+        raise ValueError("Os dados do conduto são inválidos.")
+
+    viscosidade = viscosidade_agua(temperatura)
+    rugosidade = mm_para_m(rugosidade_mm)
+    diametro_laminar = math.sqrt(32 * viscosidade * velocidade_media / (GRAVIDADE * perda_unitaria))
+    if reynolds(velocidade_media, diametro_laminar, viscosidade) < 2000:
+        diametro = diametro_laminar
+        if not DIAMETRO_MINIMO_M <= diametro <= DIAMETRO_MAXIMO_M or rugosidade >= diametro:
+            raise ValueError("Diâmetro fora dos limites de cálculo.")
+        _registrar(memorial,
+                   f"D = √(32νV/(gJ)) = √(32 × {viscosidade:.10g} × {velocidade_media:.10g}/"
+                   f"({GRAVIDADE} × {perda_unitaria:.10g})) = {diametro:.10g} m (laminar)")
+    else:
+        # Para V fixa, Re cresce com D. A busca turbulenta começa acima de Re = 4000.
+        inferior = max(
+            DIAMETRO_MINIMO_M, math.nextafter(rugosidade, math.inf),
+            4000 * viscosidade / velocidade_media * (1 + 1e-12),
         )
 
-        # Determinamos o fator de atrito.
-        f = fator_atrito(re, diametro, rugosidade)
+        def perda(d):
+            return _calcular_j(velocidade_media, d, rugosidade_mm, temperatura)
 
-        # Calculamos J pela equação de Darcy-Weisbach.
-        return perda_carga_unitaria(
-            f, velocidade_media, diametro
-        )
+        _registrar(memorial, "Em cada tentativa: Re = VD/ν e J(D) = fV²/(2gD).")
+        diametro = _buscar_diametro(perda, perda_unitaria, inferior, DIAMETRO_MAXIMO_M, None, memorial)
 
-    # 5. Estabelecemos os limites iniciais de busca.
-    # O diâmetro procurado deve produzir o J informado.
-    diametro_minimo = 0.001
-    diametro_maximo = 10.0
+    vazao = _vazao_pela_continuidade(diametro, velocidade_media, memorial)
+    if memorial is not None:
+        memorial.append("Verificação da perda unitária no diâmetro final")
+        _calcular_j(velocidade_media, diametro, rugosidade_mm, temperatura, memorial)
+    return diametro * 1000, vazao
 
-    # Verificamos se a solução está dentro dos limites.
-    if not (
-        calcular_j(diametro_minimo) >= perda_unitaria
-        and calcular_j(diametro_maximo) <= perda_unitaria
-    ):
-        raise ValueError(
-            "Não foi possível encontrar o diâmetro "
-            "dentro dos limites de cálculo."
-        )
-    # Lista que armazenará as tentativas do dimensionamento.
-    # Cada registro contém o diâmetro, J calculado e o erro.
-    historico_iteracoes = []
-    # 6. Aplicamos o método da bisseção.
-    #
-    # A cada tentativa, testamos o diâmetro intermediário
-    # e comparamos a perda calculada com a perda desejada.
-    for _ in range(200):
 
-        diametro = (
-            diametro_minimo + diametro_maximo
-        ) / 2
+def _determinar_rugosidade(velocidade_media, diametro, perda_unitaria, temperatura, memorial):
+    """Isola ε em Colebrook-White depois de obter f por Darcy-Weisbach."""
+    if velocidade_media <= 0 or diametro <= 0 or perda_unitaria <= 0:
+        raise ValueError("A velocidade, o diâmetro e a perda unitária devem ser positivos.")
 
-        j_calculado = calcular_j(diametro)
-        # Calculamos o erro relativo da perda de carga.
-        erro_percentual = (
-            abs(j_calculado - perda_unitaria)
-            / perda_unitaria
-        ) * 100
+    viscosidade = viscosidade_agua(temperatura)
+    re = reynolds(velocidade_media, diametro, viscosidade)
+    if re <= 4000:
+        raise ValueError("A rugosidade por Colebrook-White exige escoamento turbulento (Re > 4000).")
 
-        # Guardamos os resultados desta tentativa.
-        historico_iteracoes.append({
-            "iteracao": len(historico_iteracoes) + 1,
-            "diametro_mm": diametro * 1000,
-            "j_calculado": j_calculado,
-            "erro_percentual": erro_percentual,
-        })
-        # Se J calculado for maior que o desejado,
-        # precisamos aumentar o diâmetro.
-        if j_calculado > perda_unitaria:
-            diametro_minimo = diametro
+    raiz_f = math.sqrt(2 * GRAVIDADE * diametro * perda_unitaria) / velocidade_media
+    termo_atrito = 10 ** (-1 / (2 * raiz_f))
+    termo_viscosidade = 2.51 / (re * raiz_f)
+    if termo_atrito < termo_viscosidade and not math.isclose(termo_atrito, termo_viscosidade, rel_tol=1e-8):
+        raise ValueError("Os dados resultam em rugosidade negativa.")
 
-        # Caso contrário, diminuímos o diâmetro.
-        else:
-            diametro_maximo = diametro
+    rugosidade = 3.71 * diametro * max(0, termo_atrito - termo_viscosidade)
+    if rugosidade >= diametro:
+        raise ValueError("Os dados resultam em rugosidade igual ou superior ao diâmetro.")
 
-        # Encerramos quando a diferença entre os
-        # limites for menor que 0,000000001 metro.
-        if diametro_maximo - diametro_minimo < 1e-9:
-            break
+    _registrar(memorial,
+               f"Re = V D/ν = {velocidade_media:.10g} × {diametro:.10g}/"
+               f"{viscosidade:.10g} = {re:.10g} (turbulento)")
+    _registrar(memorial,
+               f"f = 2 g D J/V² = 2 × {GRAVIDADE} × {diametro:.10g} × "
+               f"{perda_unitaria:.10g}/{velocidade_media:.10g}² = {raiz_f**2:.10g}")
+    _registrar(memorial, "Colebrook-White isolada: ε = 3,71 D [10^(−1/(2√f)) − 2,51/(Re √f)]")
+    _registrar(memorial,
+               f"ε = 3,71 × {diametro:.10g} × ({termo_atrito:.10g} − {termo_viscosidade:.10g}) "
+               f"= {rugosidade:.10g} m = {rugosidade * 1000:.10g} mm")
+    return rugosidade * 1000
 
-    # 7. Calculamos o diâmetro final pela média
-    # dos dois limites encontrados.
-    diametro = (
-        diametro_minimo + diametro_maximo
-    ) / 2
 
-    # 8. Calculamos a velocidade correspondente.
-    velocidade_media = velocidade(vazao, diametro)
+def problema_tipo_3(velocidade_media, perda_unitaria, vazao_ls, temperatura, *, memorial=None):
+    """Tipo 3: determina ε (mm) e D (mm) a partir de V, J e Q."""
+    diametro = _diametro_pela_continuidade(vazao_ls, velocidade_media, memorial)
+    rugosidade = _determinar_rugosidade(velocidade_media, diametro, perda_unitaria, temperatura, memorial)
+    return rugosidade, diametro * 1000
 
-    # 9. Convertemos o diâmetro de metros para mm.
-    diametro_mm = diametro * 1000
 
-    # 10. Retornamos os resultados.
-        # Quando solicitado, retornamos também as iterações
-    # para apresentar no memorial de cálculo.
-    if registrar_iteracoes:
-        return diametro_mm, velocidade_media, historico_iteracoes
+def problema_tipo_6(vazao_ls, diametro_mm, perda_unitaria, temperatura, *, memorial=None):
+    """Tipo 6: determina ε (mm) e V (m/s) a partir de Q, D e J."""
+    if diametro_mm <= 0:
+        raise ValueError("O diâmetro deve ser positivo.")
 
-    # Mantemos o retorno original para não afetar
-    # os testes e outras partes do programa.
-    return diametro_mm, velocidade_media
+    diametro = mm_para_m(diametro_mm)
+    velocidade_media = _velocidade_pela_continuidade(litros_para_m3(vazao_ls), diametro, memorial)
+    rugosidade = _determinar_rugosidade(velocidade_media, diametro, perda_unitaria, temperatura, memorial)
+    return rugosidade, velocidade_media
+
+
+def problema_tipo_10(velocidade_media, diametro_mm, perda_unitaria, temperatura, *, memorial=None):
+    """Tipo 10: determina ε (mm) e Q (L/s) a partir de V, D e J."""
+    diametro = mm_para_m(diametro_mm)
+    rugosidade = _determinar_rugosidade(velocidade_media, diametro, perda_unitaria, temperatura, memorial)
+    return rugosidade, _vazao_pela_continuidade(diametro, velocidade_media, memorial)
