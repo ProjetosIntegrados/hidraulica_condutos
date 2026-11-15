@@ -10,6 +10,7 @@
 # Requisito: Python compatível instalado no computador.
 # ============================================================
 
+import argparse
 import sys
 from pathlib import Path
 
@@ -31,4 +32,17 @@ from hidraulica_condutos.main import main
 
 # Inicia o programa quando este arquivo for executado.
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description="Cálculo de condutos sob pressão.")
+    parser.add_argument("--memorial", metavar="ARQUIVO", help="salva o memorial em um arquivo novo")
+    try:
+        main(parser.parse_args().memorial)
+    except (EOFError, KeyboardInterrupt):
+        print("\nEntrada interrompida.")
+        raise SystemExit(1) from None
+
+    # Mantém o resultado visível quando o programa é aberto com dois cliques.
+    if sys.stdin.isatty():
+        try:
+            input("\nPressione Enter para sair...")
+        except (EOFError, KeyboardInterrupt):
+            pass

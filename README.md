@@ -11,11 +11,11 @@ A ferramenta computacional tem como objetivo automatizar a resolução dos nove 
 
 A partir das variáveis fornecidas pelo usuário, o programa identifica as incógnitas e aplica os procedimentos de cálculo correspondentes.
 
-Atualmente, estão implementados os problemas dos tipos 1 e 7. As demais rotinas fazem parte das próximas etapas de desenvolvimento.
+Esta versão resolve oito tipos de problema em um sistema com dois reservatórios e um conduto circular cheio, considerando as perdas distribuídas. A definição do tipo 9 ainda precisa ser confirmada no material da disciplina.
 
 ## Instalação
 
-A versão principal do programa funciona pelo terminal, utilizando Python, sem necessidade de instalar Poetry ou bibliotecas externas.
+O programa funciona pelo terminal e usa apenas a biblioteca padrão do Python.
 
 ### Requisitos
 
@@ -40,7 +40,7 @@ Em sistemas que utilizam o comando `python3`, execute:
 python3 executar_terminal.py
 ```
 
-O programa será iniciado diretamente pelo terminal.
+Após exibir o resultado e o memorial, o programa aguarda mais um **Enter** para sair quando aberto em um terminal interativo.
 
 ## Uso
 
@@ -61,29 +61,32 @@ A perda de carga unitária também poderá ser calculada a partir do comprimento
 
 ### Problemas implementados
 
-**Tipo 1 — Dimensionamento**
+| Tipo | Categoria | Dados conhecidos | Grandezas calculadas |
+| --- | --- | --- | --- |
+| 1 | Dimensionamento | Q, J, ε | D, V |
+| 2 | Dimensionamento | V, ε, Q | D, J |
+| 3 | Rugosidade | V, J, Q | ε, D |
+| 4 | Dimensionamento | V, J, ε | D, Q |
+| 5 | Verificação | D, Q, ε | V, J |
+| 6 | Rugosidade | Q, D, J | ε, V |
+| 7 | Verificação | D, J, ε | V, Q |
+| 10 | Rugosidade | V, D, J | ε, Q |
 
-Dados conhecidos: Q, J e ε.
+Informe a temperatura da água nos oito casos. Os tipos 1 e 4 usam bisseção quando há busca de diâmetro, com intervalo final de até 0,1 mm. Os tipos 3, 6 e 10 determinam a rugosidade pela equação de Colebrook-White para escoamento turbulento.
 
-Incógnitas: D e V.
-
-O programa determina o diâmetro por meio de um procedimento iterativo e calcula a velocidade correspondente.
-
-**Tipo 7 — Verificação**
-
-Dados conhecidos: D, J e ε.
-
-Incógnitas: V e Q.
-
-O programa determina a velocidade e a vazão do escoamento.
+O arquivo [Casos de uso](exemplos/casos_de_uso.md) apresenta um exercício para cada categoria.
 
 ### Resultados
 
-Os resultados numéricos são apresentados diretamente no terminal, acompanhados de suas unidades.
+O terminal apresenta os resultados e o memorial de cálculo com os dados de entrada, as conversões de unidades, as equações com substituição numérica e os valores intermediários. Quando há bisseção, o memorial registra as tentativas e o intervalo final. Se J vier das cotas, o memorial registra também o desnível e o comprimento.
 
-O programa também identifica outras combinações de dados, informando quando a rotina correspondente ainda não está implementada.
+Para gravar o memorial em um arquivo de texto UTF-8, execute o programa com a opção `--memorial` e informe um nome novo.
 
-A interface gráfica desenvolvida anteriormente permanece disponível como alternativa, permitindo visualizar o sistema hidráulico e o memorial de cálculo dos tipos implementados.
+```bash
+python executar_terminal.py --memorial memorial_tipo_10.txt
+```
+
+Se a combinação de dados não corresponder aos casos implementados ou o cálculo indicar dados incompatíveis, o programa apresenta uma mensagem no terminal.
 
 ## Testes
 
@@ -105,7 +108,7 @@ python -m pytest -v
 
 ### Verificação automática
 
-O projeto também utiliza **GitHub Actions** para executar automaticamente:
+O projeto usa **GitHub Actions** para executar as verificações em Linux e Windows:
 
 1. Verificação da sintaxe dos arquivos Python;
 2. Instalação das dependências necessárias aos testes;
@@ -115,9 +118,7 @@ O projeto também utiliza **GitHub Actions** para executar automaticamente:
 
 Essa verificação permite detectar possíveis falhas após modificações no código.
 
-Na última execução validada, **18 testes automatizados foram aprovados**.
-
-A aprovação dos testes indica que as funcionalidades verificadas continuam apresentando os resultados esperados, mas não substitui uma validação completa de todas as situações hidráulicas possíveis.
+A suíte cobre os oito tipos implementados, as equações exibidas no memorial, a exportação para texto e casos de entrada inválida. O GitHub registra o resultado de cada execução na aba **Actions**.
 
 ## Estrutura do projeto
 
@@ -130,15 +131,16 @@ A aprovação dos testes indica que as funcionalidades verificadas continuam apr
 │   └── hidraulica_condutos/
 │       ├── __init__.py
 │       ├── calculos.py
-│       ├── interface.py
 │       └── main.py
 ├── tests/
 │   ├── test_calculos.py
+│   ├── test_demais_tipos.py
 │   ├── test_main.py
+│   ├── test_memorial.py
 │   └── test_terminal.py
 ├── exemplos/
+│   └── casos_de_uso.md
 ├── docs/
-├── executar.py
 ├── executar_terminal.py
 ├── README.md
 ├── LICENSE
@@ -150,9 +152,7 @@ A aprovação dos testes indica que as funcionalidades verificadas continuam apr
 
 - `calculos.py`: implementação das equações e rotinas hidráulicas.
 - `main.py`: entrada de dados, identificação dos problemas e apresentação dos resultados pelo terminal.
-- `interface.py`: interface gráfica opcional.
-- `executar_terminal.py`: inicializador da versão simplificada.
-- `executar.py`: inicializador da interface gráfica.
+- `executar_terminal.py`: inicializador do programa pelo terminal.
 - `tests/`: testes automatizados.
 - `verificacao.yml`: configuração dos testes automáticos no GitHub.
 
@@ -162,13 +162,13 @@ O desenvolvimento do projeto priorizou a criação de uma ferramenta computacion
 
 Para isso, são utilizadas as equações da continuidade, Darcy-Weisbach e Colebrook-White, além de relações para a viscosidade cinemática e o número de Reynolds.
 
-O desenvolvimento inicial contemplou os tipos 1 e 7, permitindo validar os cálculos com exercícios resolvidos na disciplina.
+O desenvolvimento inicial contemplou os tipos 1 e 7, validados com exercícios resolvidos na disciplina. Os testes dos tipos 2, 3, 4, 5, 6 e 10 reorganizam os dados do exemplo de verificação para conferir se cada rotina recupera as grandezas esperadas.
 
 Posteriormente, o programa foi adaptado para permitir uma execução simplificada pelo terminal, reduzindo as dependências necessárias para sua utilização.
 
 Também foram implementados testes automatizados para facilitar futuras modificações e ampliações do código.
 
-O objetivo futuro permanece sendo a implementação dos demais tipos de problemas e a possibilidade de ampliação para sistemas hidráulicos mais complexos.
+O escopo futuro inclui sistemas hidráulicos mais complexos.
 
 ## Autores
 

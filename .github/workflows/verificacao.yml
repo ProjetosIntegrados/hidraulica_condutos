@@ -28,7 +28,10 @@ permissions:
 jobs:
   verificar:
     name: Compilacao e testes
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.sistema }}
+    strategy:
+      matrix:
+        sistema: [ubuntu-latest, windows-latest]
 
     steps:
       # 1. Baixa o codigo do repositorio.
