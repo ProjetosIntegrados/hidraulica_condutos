@@ -4,15 +4,9 @@
 > Este projeto foi desenvolvido por estudantes no contexto de uma disciplina de graduação e possui finalidade exclusivamente educacional. Os resultados não foram necessariamente validados para uso profissional e devem ser utilizados com cautela e verificados independentemente.
 
 ## Descrição
+A ferramenta resolve oito tipos de problemas de dimensionamento, verificação e determinação da rugosidade de condutos sob pressão, conforme a tabela de casos implementados.
 
-O objetivo do projeto é permitir uma resolução mais rápida e proporcionar uma melhor visualização de problemas relacionados ao dimensionamento e à análise de condutos.
-
-A ferramenta computacional tem como objetivo automatizar a resolução dos nove tipos de problemas básicos abordados na disciplina de Hidráulica, considerando inicialmente um sistema composto por dois reservatórios interligados por um conduto.
-
-A partir das variáveis fornecidas pelo usuário, o programa identifica as incógnitas e aplica os procedimentos de cálculo correspondentes.
-
-Esta versão resolve oito tipos de problema em um sistema com dois reservatórios e um conduto circular cheio, considerando as perdas distribuídas. A definição do tipo 9 ainda precisa ser confirmada no material da disciplina.
-
+O programa considera dois reservatórios interligados por um conduto circular cheio, com perdas de carga distribuídas. A partir dos dados fornecidos pelo usuário, identifica o tipo de problema, calcula as incógnitas e apresenta os resultados e o memorial de cálculo no terminal.
 ## Instalação
 
 O programa funciona pelo terminal e usa apenas a biblioteca padrão do Python.
