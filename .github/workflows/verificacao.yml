@@ -47,7 +47,7 @@ jobs:
 
       # 4. Verifica erros de sintaxe dos arquivos.
       - name: Verificar compilacao
-        run: python -m compileall -q src tests executar.py executar_terminal.py
+        run: python -m compileall -q src tests executar_terminal.py
 
       # 5. Executa os testes funcionais existentes.
       - name: Executar testes

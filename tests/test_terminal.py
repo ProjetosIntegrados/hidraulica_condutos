@@ -45,8 +45,10 @@ def test_terminal_tipo_1(monkeypatch, capsys):
     saida = capsys.readouterr().out
 
     assert "Problema identificado: TIPO 1" in saida
-    assert "Diâmetro: 184.426 mm" in saida
+    assert "Diâmetro: 184.4 mm" in saida
     assert "Velocidade: 1.7631 m/s" in saida
+    assert "MEMORIAL RESUMIDO" in saida
+    assert "bisseção com intervalo final de até 0,1 mm" in saida
 
 
 def test_terminal_tipo_7(monkeypatch, capsys):
@@ -71,6 +73,8 @@ def test_terminal_tipo_7(monkeypatch, capsys):
     assert "Problema identificado: TIPO 7" in saida
     assert "Velocidade: 1.4200 m/s" in saida
     assert "Vazão: 37.7571 L/s" in saida
+    assert "MEMORIAL RESUMIDO" in saida
+    assert "Colebrook-White e Darcy-Weisbach" in saida
 
 
 def test_temperatura_ausente(monkeypatch, capsys):

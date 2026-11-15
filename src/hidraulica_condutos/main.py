@@ -1,9 +1,12 @@
-
 """Programa de cálculo de condutos sob pressão pelo terminal."""
 
 import math
 
-from hidraulica_condutos.calculos import problema_tipo_1, problema_tipo_7
+from hidraulica_condutos.calculos import (
+    TOLERANCIA_DIAMETRO_MM,
+    problema_tipo_1,
+    problema_tipo_7,
+)
 
 
 # Combinações de grandezas conhecidas.
@@ -39,10 +42,7 @@ def ler_numero(mensagem):
 
 def identificar_tipo(dados):
     """Identifica o problema pelas grandezas preenchidas."""
-    conhecidos = frozenset(
-        chave for chave, valor in dados.items()
-        if valor is not None
-    )
+    conhecidos = frozenset(chave for chave, valor in dados.items() if valor is not None)
     return TIPOS.get(conhecidos)
 
 
@@ -62,24 +62,21 @@ def obter_perda_unitaria():
         if escolha == "1":
             return ler_numero("J (m/m): ")
 
-        if escolha == "2":
-            comprimento = ler_numero("Comprimento L (m): ")
-            z1 = ler_numero("Cota do reservatório 1 (m): ")
-            z2 = ler_numero("Cota do reservatório 2 (m): ")
+        if escolha != "2":
+            print("Escolha 1, 2 ou ENTER.")
+            continue
 
-            if None in (comprimento, z1, z2):
-                print("Informe comprimento e as duas cotas.")
-                continue
-
-            if comprimento <= 0 or z1 <= z2:
-                print("É necessário L > 0 e z1 > z2.")
-                continue
-
+        comprimento = ler_numero("Comprimento L (m): ")
+        z1 = ler_numero("Cota do reservatório 1 (m): ")
+        z2 = ler_numero("Cota do reservatório 2 (m): ")
+        if None in (comprimento, z1, z2):
+            print("Informe comprimento e as duas cotas.")
+        elif comprimento <= 0 or z1 <= z2:
+            print("É necessário L > 0 e z1 > z2.")
+        else:
             j = (z1 - z2) / comprimento
             print(f"Perda de carga unitária: {j:.6f} m/m")
             return j
-
-        print("Escolha 1, 2 ou ENTER.")
 
 
 def main():
@@ -113,33 +110,25 @@ def main():
         print("Este tipo ainda não possui cálculo implementado.")
         return
 
+    j, rugosidade = dados["J"], dados["e"]
     try:
         if tipo == 1:
-            diametro, velocidade = problema_tipo_1(
-                vazao_ls=dados["Q"],
-                perda_unitaria=dados["J"],
-                rugosidade_mm=dados["e"],
-                temperatura=temperatura,
-            )
-
-            print("\nRESULTADOS")
-            print(f"Diâmetro: {diametro:.3f} mm")
-            print(f"Velocidade: {velocidade:.4f} m/s")
-
+            diametro, velocidade = problema_tipo_1(dados["Q"], j, rugosidade, temperatura)
+            tolerancia = f"{TOLERANCIA_DIAMETRO_MM:g}".replace(".", ",")
+            metodo = f"Diâmetro por bisseção com intervalo final de até {tolerancia} mm."
+            resultados = (f"Diâmetro: {diametro:.1f} mm", f"Velocidade: {velocidade:.4f} m/s")
         else:
-            velocidade, vazao = problema_tipo_7(
-                diametro_mm=dados["D"],
-                perda_unitaria=dados["J"],
-                rugosidade_mm=dados["e"],
-                temperatura=temperatura,
-            )
-
-            print("\nRESULTADOS")
-            print(f"Velocidade: {velocidade:.4f} m/s")
-            print(f"Vazão: {vazao:.4f} L/s")
-
+            velocidade, vazao = problema_tipo_7(dados["D"], j, rugosidade, temperatura)
+            metodo = "Velocidade por Colebrook-White e Darcy-Weisbach. Vazão por Q = A × V."
+            resultados = (f"Velocidade: {velocidade:.4f} m/s", f"Vazão: {vazao:.4f} L/s")
     except (ValueError, ZeroDivisionError, OverflowError) as erro:
         print(f"\nErro no cálculo: {erro}")
+        return
+
+    print("\nRESULTADOS", *resultados, sep="\n")
+    print("\nMEMORIAL RESUMIDO")
+    print(f"J utilizado: {j:.8g} m/m")
+    print(metodo)
 
 
 if __name__ == "__main__":
