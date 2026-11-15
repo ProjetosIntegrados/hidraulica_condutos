@@ -1,0 +1,47 @@
+MEMORIAL DE CÁLCULO
+Tipo 4
+Dados: V = 1.419950794 m/s, J = 0.01449275362 m/m, ε = 0.5 mm, T = 25 °C
+h_p = z₁ − z₂ = 84 − (68) = 16 m
+J = h_p/L = 16/1104 = 0.01449275362 m/m
+ε = 0.5/1000 = 0.0005 m
+ν = 1,78 × 10⁻⁶/(1 + 0,0337 T + 0,000221 T²)
+ν = 1,78 × 10⁻⁶/(1 + 0,0337 × 25 + 0,000221 × (25)²) = 8.987062165e-07 m²/s
+Em cada tentativa: Re = VD/ν e J(D) = fV²/(2gD).
+Bisseção: D inicial entre 2.531654534 e 10000 mm.
+Alvo J = 0.01449275362 m/m; largura final de até 0,1 mm.
+Em cada tentativa: D = (D inferior + D superior)/2.
+Se J(D) > J alvo, atualiza D inferior; nos demais casos, atualiza D superior.
+  D, iteração 1: 5001.265827 mm; J(D) = 0.0002509340279 m/m; diferença relativa = 98.2686%
+  D, iteração 2: 2501.898741 mm; J(D) = 0.0005748377587 m/m; diferença relativa = 96.0336%
+  D, iteração 3: 1252.215198 mm; J(D) = 0.001329192317 m/m; diferença relativa = 90.8286%
+  D, iteração 4: 627.3734261 mm; J(D) = 0.003105185816 m/m; diferença relativa = 78.5742%
+  D, iteração 5: 314.9525403 mm; J(D) = 0.007333762547 m/m; diferença relativa = 49.397%
+  D, iteração 6: 158.7420974 mm; J(D) = 0.01750783129 m/m; diferença relativa = 20.804%
+  D, iteração 7: 236.8473189 mm; J(D) = 0.01051069169 m/m; diferença relativa = 27.4762%
+  D, iteração 8: 197.7947082 mm; J(D) = 0.0132158816 m/m; diferença relativa = 8.81042%
+  D, iteração 9: 178.2684028 mm; J(D) = 0.01509077455 m/m; diferença relativa = 4.12634%
+  D, iteração 10: 188.0315555 mm; J(D) = 0.01409721243 m/m; diferença relativa = 2.72923%
+  D, iteração 11: 183.1499791 mm; J(D) = 0.01457871828 m/m; diferença relativa = 0.593156%
+  D, iteração 12: 185.5907673 mm; J(D) = 0.01433431346 m/m; diferença relativa = 1.09324%
+  D, iteração 13: 184.3703732 mm; J(D) = 0.01445558278 m/m; diferença relativa = 0.256479%
+  D, iteração 14: 183.7601762 mm; J(D) = 0.01451691468 m/m; diferença relativa = 0.166711%
+  D, iteração 15: 184.0652747 mm; J(D) = 0.01448619009 m/m; diferença relativa = 0.0452884%
+  D, iteração 16: 183.9127254 mm; J(D) = 0.01450153769 m/m; diferença relativa = 0.06061%
+  D, iteração 17: 183.9890001 mm; J(D) = 0.01449386022 m/m; diferença relativa = 0.00763551%
+D final = (183.9890001 + 184.0652747)/2 = 184.0271374 mm após 17 iterações.
+A = π D²/4 = π × 0.1840271374²/4 = 0.02659828422 m²
+Q = A V = 0.02659828422 × 1.419950794 = 0.0377682548 m³/s = 37.7682548 L/s
+Verificação da perda unitária no diâmetro final
+Re = V D/ν = 1.419950794 × 0.1840271374/8.987062165e-07 = 290761.8475
+Colebrook-White: f_novo = [-2 log10(ε/(3,71 D) + 2,51/(Re √f))]⁻²
+ε/(3,71 D) = 0.0005/(3,71 × 0.1840271374); Re = 290761.8475
+Estimativa inicial f = 0,02; parada quando |f_novo − f| < 10⁻¹⁰.
+  f, iteração 1: f anterior = 0.02; f_novo = [-2 log10(0.000793383429)]⁻² = 0.02600589531
+  f, iteração 2: f anterior = 0.02600589531; f_novo = [-2 log10(0.0007858728649)]⁻² = 0.02593673802
+  f, iteração 3: f anterior = 0.02593673802; f_novo = [-2 log10(0.0007859441837)]⁻² = 0.02593739652
+  f, iteração 4: f anterior = 0.02593739652; f_novo = [-2 log10(0.0007859435033)]⁻² = 0.02593739024
+  f, iteração 5: f anterior = 0.02593739024; f_novo = [-2 log10(0.0007859435098)]⁻² = 0.0259373903
+J = f V²/(2 g D) = 0.0259373903 × 1.419950794²/(2 × 9.806 × 0.1840271374) = 0.01449002424 m/m
+Resultados finais
+Diâmetro: 184.0 mm
+Vazão: 37.7683 L/s
