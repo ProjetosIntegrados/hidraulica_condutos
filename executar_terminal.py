@@ -35,14 +35,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Cálculo de condutos sob pressão.")
     parser.add_argument("--memorial", metavar="ARQUIVO", help="salva o memorial em um arquivo novo")
     try:
+        # A pergunta sobre outro cálculo mantém o resultado visível no terminal.
         main(parser.parse_args().memorial)
     except (EOFError, KeyboardInterrupt):
         print("\nEntrada interrompida.")
         raise SystemExit(1) from None
-
-    # Mantém o resultado visível quando o programa é aberto com dois cliques.
-    if sys.stdin.isatty():
-        try:
-            input("\nPressione Enter para sair...")
-        except (EOFError, KeyboardInterrupt):
-            pass
