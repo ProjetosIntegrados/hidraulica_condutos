@@ -80,7 +80,7 @@ def obter_perda_unitaria(memorial=None):
             return None
 
         if escolha == "1":
-                       j = ler_numero(
+            j = ler_numero(
                 "J (m/m): ",
                 valido=lambda v: v > 0,
                 erro="A perda de carga unitária deve ser maior que zero.",
@@ -92,8 +92,7 @@ def obter_perda_unitaria(memorial=None):
         if escolha != "2":
             print("Escolha 1, 2 ou ENTER.")
             continue
-
-                comprimento = ler_numero(
+        comprimento = ler_numero(
             "Comprimento L (m): ",
             valido=lambda v: v > 0,
             erro="O comprimento do conduto deve ser maior que zero.",
