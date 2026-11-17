@@ -231,7 +231,7 @@ def _executar_calculo(arquivo_memorial, interativo):
         "Resultados finais", *resultados,
     ])
     print(f"\n{memorial}")
-        if arquivo_memorial is not None or (
+    if arquivo_memorial is not None or (
         interativo and confirmar("Deseja salvar o memorial?")
     ):
         try:
