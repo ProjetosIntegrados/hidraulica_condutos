@@ -65,7 +65,7 @@ def fator_atrito(re, diametro, rugosidade, *, memorial=None):
 
     if re < 2000:
         f = 64 / re
-        _registrar(memorial, f"f = 64 / Re = 64 / {re:.10g} = {f:.10g} (laminar)")
+        _registrar(memorial, f"f = 64 / Re = 64 / {re:.4g} = {f:.4g} (laminar)")
         return f
 
     if re <= 4000:
@@ -75,7 +75,7 @@ def fator_atrito(re, diametro, rugosidade, *, memorial=None):
         memorial,
         "Colebrook-White: f_novo = [-2 log10(ε/(3,71 D) + 2,51/(Re √f))]⁻²",
     )
-    _registrar(memorial, f"ε/(3,71 D) = {rugosidade:.10g}/(3,71 × {diametro:.10g}); Re = {re:.10g}")
+    _registrar(memorial, f"ε/(3,71 D) = {rugosidade:.4g}/(3,71 × {diametro:.4g}); Re = {re:.4g}")
     f = 0.02
     _registrar(memorial, "Estimativa inicial f = 0,02; parada quando |f_novo − f| < 10⁻¹⁰.")
     for iteracao in range(1, 101):
@@ -83,8 +83,8 @@ def fator_atrito(re, diametro, rugosidade, *, memorial=None):
         novo_f = (-2 * math.log10(argumento)) ** -2
         if memorial is not None:
             memorial.append(
-                f"  f, iteração {iteracao}: f anterior = {f:.10g}; "
-                f"f_novo = [-2 log10({argumento:.10g})]⁻² = {novo_f:.10g}"
+                f"  f, iteração {iteracao}: f anterior = {f:.4g}; "
+                f"f_novo = [-2 log10({argumento:.4g})]⁻² = {novo_f:.4g}"
             )
         if abs(novo_f - f) < 1e-10:
             return novo_f
@@ -108,9 +108,9 @@ def problema_tipo_7(diametro_mm, perda_unitaria, rugosidade_mm, temperatura, *, 
     if re_laminar < 2000:
         velocidade_media = v_laminar
         _registrar(memorial,
-                   f"V = g J D²/(32ν) = {GRAVIDADE} × {perda_unitaria:.10g} × "
-                   f"{diametro:.10g}²/(32 × {viscosidade:.10g}) = {velocidade_media:.10g} m/s")
-        _registrar(memorial, f"Re = V D/ν = {re_laminar:.10g} (laminar)")
+                   f"V = g J D²/(32ν) = {GRAVIDADE} × {perda_unitaria:.4g} × "
+                   f"{diametro:.4g}²/(32 × {viscosidade:.4g}) = {velocidade_media:.4g} m/s")
+        _registrar(memorial, f"Re = V D/ν = {re_laminar:.4g} (laminar)")
     else:
         auxiliar = math.sqrt(2 * GRAVIDADE * perda_unitaria * diametro)
         termo_rugosidade = rugosidade / (3.71 * diametro)
@@ -121,21 +121,21 @@ def problema_tipo_7(diametro_mm, perda_unitaria, rugosidade_mm, temperatura, *, 
             raise ValueError("Os dados não produziram solução em regime laminar ou turbulento.")
 
         _registrar(memorial,
-                   f"U = √(2 g J D) = √(2 × {GRAVIDADE} × {perda_unitaria:.10g} × "
-                   f"{diametro:.10g}) = {auxiliar:.10g} m/s")
+                   f"U = √(2 g J D) = √(2 × {GRAVIDADE} × {perda_unitaria:.4g} × "
+                   f"{diametro:.4g}) = {auxiliar:.4g} m/s")
         _registrar(memorial, "Colebrook-White e Darcy-Weisbach: V = −2 U log10(ε/(3,71 D) + 2,51ν/(D U))")
         _registrar(memorial,
-                   f"V = −2 × {auxiliar:.10g} × log10({termo_rugosidade:.10g} + "
-                   f"{termo_viscosidade:.10g}) = {velocidade_media:.10g} m/s")
+                   f"V = −2 × {auxiliar:.4g} × log10({termo_rugosidade:.4g} + "
+                   f"{termo_viscosidade:.4g}) = {velocidade_media:.4g} m/s")
         _registrar(memorial,
-                   f"Re = V D/ν = {velocidade_media:.10g} × {diametro:.10g}/"
-                   f"{viscosidade:.10g} = {re:.10g} (turbulento)")
+                   f"Re = V D/ν = {velocidade_media:.4g} × {diametro:.4g}/"
+                   f"{viscosidade:.4g} = {re:.4g} (turbulento)")
 
     if memorial is not None:
         f = 2 * GRAVIDADE * diametro * perda_unitaria / velocidade_media**2
         _registrar(memorial,
-                   f"f = 2 g D J/V² = 2 × {GRAVIDADE} × {diametro:.10g} × "
-                   f"{perda_unitaria:.10g}/{velocidade_media:.10g}² = {f:.10g}")
+                   f"f = 2 g D J/V² = 2 × {GRAVIDADE} × {diametro:.4g} × "
+                   f"{perda_unitaria:.4g}/{velocidade_media:.4g}² = {f:.4g}")
     return velocidade_media, _vazao_pela_continuidade(diametro, velocidade_media, memorial)
 
 
@@ -144,9 +144,9 @@ def _buscar_diametro(perda, j_alvo, inferior, superior, historico, memorial):
     if inferior > superior or not perda(inferior) >= j_alvo >= perda(superior):
         raise ValueError("Sem solução turbulenta no intervalo de diâmetros. Confira os dados e o regime.")
 
-    _registrar(memorial, f"Bisseção: D inicial entre {inferior * 1000:.10g} e {superior * 1000:.10g} mm.")
+    _registrar(memorial, f"Bisseção: D inicial entre {inferior * 1000:.4g} e {superior * 1000:.4g} mm.")
     tolerancia = f"{TOLERANCIA_DIAMETRO_MM:g}".replace(".", ",")
-    _registrar(memorial, f"Alvo J = {j_alvo:.10g} m/m; largura final de até {tolerancia} mm.")
+    _registrar(memorial, f"Alvo J = {j_alvo:.4g} m/m; largura final de até {tolerancia} mm.")
     _registrar(memorial, "Em cada tentativa: D = (D inferior + D superior)/2.")
     _registrar(memorial, "Se J(D) > J alvo, atualiza D inferior; nos demais casos, atualiza D superior.")
     tolerancia_m = mm_para_m(TOLERANCIA_DIAMETRO_MM)
@@ -163,7 +163,7 @@ def _buscar_diametro(perda, j_alvo, inferior, superior, historico, memorial):
                     "j_calculado": j, "erro_percentual": erro,
                 })
             _registrar(memorial,
-                       f"  D, iteração {iteracao}: {diametro * 1000:.10g} mm; J(D) = {j:.10g} m/m; "
+                       f"  D, iteração {iteracao}: {diametro * 1000:.2f} mm; J(D) = {j:.4g} m/m; "
                        f"diferença relativa = {erro:.6g}%")
 
         if j > j_alvo:
@@ -173,8 +173,8 @@ def _buscar_diametro(perda, j_alvo, inferior, superior, historico, memorial):
 
     diametro = (inferior + superior) / 2
     _registrar(memorial,
-               f"D final = ({inferior * 1000:.10g} + {superior * 1000:.10g})/2 "
-               f"= {diametro * 1000:.10g} mm após {iteracao} iterações.")
+               f"D final = ({inferior * 1000:.4g} + {superior * 1000:.4g})/2 "
+               f"= {diametro * 1000:.4g} mm após {iteracao} iterações.")
     return diametro
 
 
@@ -199,8 +199,8 @@ def problema_tipo_1(
         if not DIAMETRO_MINIMO_M <= diametro <= DIAMETRO_MAXIMO_M or rugosidade >= diametro:
             raise ValueError("Diâmetro fora dos limites de cálculo.")
         _registrar(memorial,
-                   f"D = [128νQ/(πgJ)]^(1/4) = [128 × {viscosidade:.10g} × {vazao:.10g}/"
-                   f"(π × {GRAVIDADE} × {perda_unitaria:.10g})]^(1/4) = {diametro:.10g} m (laminar)")
+                   f"D = [128νQ/(πgJ)]^(1/4) = [128 × {viscosidade:.4g} × {vazao:.4g}/"
+                   f"(π × {GRAVIDADE} × {perda_unitaria:.4g})]^(1/4) = {diametro:.4g} m (laminar)")
     else:
         # Limita as tentativas a Re > 4000, evitando avaliar pontos de transição.
         superior = min(DIAMETRO_MAXIMO_M, vazao / (1000 * math.pi * viscosidade) * (1 - 1e-12))
@@ -224,16 +224,16 @@ def problema_tipo_1(
 def _vazao_pela_continuidade(diametro, velocidade_media, memorial):
     area = area_conduto(diametro)
     vazao = area * velocidade_media
-    _registrar(memorial, f"A = π D²/4 = π × {diametro:.10g}²/4 = {area:.10g} m²")
-    _registrar(memorial, f"Q = A V = {area:.10g} × {velocidade_media:.10g} = {vazao:.10g} m³/s = {vazao * 1000:.10g} L/s")
+    _registrar(memorial, f"A = π D²/4 = π × {diametro:.4g}²/4 = {area:.4g} m²")
+    _registrar(memorial, f"Q = A V = {area:.4g} × {velocidade_media:.4g} = {vazao:.4g} m³/s = {vazao * 1000:.4g} L/s")
     return vazao * 1000
 
 
 def _velocidade_pela_continuidade(vazao, diametro, memorial):
     area = area_conduto(diametro)
     velocidade_media = vazao / area
-    _registrar(memorial, f"A = π D²/4 = π × {diametro:.10g}²/4 = {area:.10g} m²")
-    _registrar(memorial, f"V = Q/A = {vazao:.10g}/{area:.10g} = {velocidade_media:.10g} m/s")
+    _registrar(memorial, f"A = π D²/4 = π × {diametro:.4g}²/4 = {area:.4g} m²")
+    _registrar(memorial, f"V = Q/A = {vazao:.4g}/{area:.4g} = {velocidade_media:.4g} m/s")
     return velocidade_media
 
 
@@ -245,8 +245,8 @@ def _diametro_pela_continuidade(vazao_ls, velocidade_media, memorial):
     vazao = litros_para_m3(vazao_ls)
     diametro = math.sqrt(4 * vazao / (math.pi * velocidade_media))
     _registrar(memorial,
-               f"D = √(4Q/(πV)) = √(4 × {vazao:.10g}/(π × {velocidade_media:.10g})) "
-               f"= {diametro:.10g} m = {diametro * 1000:.10g} mm")
+               f"D = √(4Q/(πV)) = √(4 × {vazao:.4g}/(π × {velocidade_media:.4g})) "
+               f"= {diametro:.4g} m = {diametro * 1000:.4g} mm")
     return diametro
 
 
@@ -255,13 +255,13 @@ def _calcular_j(velocidade_media, diametro, rugosidade_mm, temperatura, memorial
     viscosidade = viscosidade_agua(temperatura)
     re = reynolds(velocidade_media, diametro, viscosidade)
     _registrar(memorial,
-               f"Re = V D/ν = {velocidade_media:.10g} × {diametro:.10g}/"
-               f"{viscosidade:.10g} = {re:.10g}")
+               f"Re = V D/ν = {velocidade_media:.4g} × {diametro:.4g}/"
+               f"{viscosidade:.4g} = {re:.4g}")
     f = fator_atrito(re, diametro, mm_para_m(rugosidade_mm), memorial=memorial)
     j = perda_carga_unitaria(f, velocidade_media, diametro)
     _registrar(memorial,
-               f"J = f V²/(2 g D) = {f:.10g} × {velocidade_media:.10g}²/"
-               f"(2 × {GRAVIDADE} × {diametro:.10g}) = {j:.10g} m/m")
+               f"J = f V²/(2 g D) = {f:.4g} × {velocidade_media:.4g}²/"
+               f"(2 × {GRAVIDADE} × {diametro:.4g}) = {j:.4g} m/m")
     return j
 
 
@@ -296,8 +296,8 @@ def problema_tipo_4(velocidade_media, perda_unitaria, rugosidade_mm, temperatura
         if not DIAMETRO_MINIMO_M <= diametro <= DIAMETRO_MAXIMO_M or rugosidade >= diametro:
             raise ValueError("Diâmetro fora dos limites de cálculo.")
         _registrar(memorial,
-                   f"D = √(32νV/(gJ)) = √(32 × {viscosidade:.10g} × {velocidade_media:.10g}/"
-                   f"({GRAVIDADE} × {perda_unitaria:.10g})) = {diametro:.10g} m (laminar)")
+                   f"D = √(32νV/(gJ)) = √(32 × {viscosidade:.4g} × {velocidade_media:.4g}/"
+                   f"({GRAVIDADE} × {perda_unitaria:.4g})) = {diametro:.4g} m (laminar)")
     else:
         # Para V fixa, Re cresce com D. A busca turbulenta começa acima de Re = 4000.
         inferior = max(
@@ -339,15 +339,15 @@ def _determinar_rugosidade(velocidade_media, diametro, perda_unitaria, temperatu
         raise ValueError("Os dados resultam em rugosidade igual ou superior ao diâmetro.")
 
     _registrar(memorial,
-               f"Re = V D/ν = {velocidade_media:.10g} × {diametro:.10g}/"
-               f"{viscosidade:.10g} = {re:.10g} (turbulento)")
+               f"Re = V D/ν = {velocidade_media:.4g} × {diametro:.4g}/"
+               f"{viscosidade:.4g} = {re:.4g} (turbulento)")
     _registrar(memorial,
-               f"f = 2 g D J/V² = 2 × {GRAVIDADE} × {diametro:.10g} × "
-               f"{perda_unitaria:.10g}/{velocidade_media:.10g}² = {raiz_f**2:.10g}")
+               f"f = 2 g D J/V² = 2 × {GRAVIDADE} × {diametro:.4g} × "
+               f"{perda_unitaria:.4g}/{velocidade_media:.4g}² = {raiz_f**2:.4g}")
     _registrar(memorial, "Colebrook-White isolada: ε = 3,71 D [10^(−1/(2√f)) − 2,51/(Re √f)]")
     _registrar(memorial,
-               f"ε = 3,71 × {diametro:.10g} × ({termo_atrito:.10g} − {termo_viscosidade:.10g}) "
-               f"= {rugosidade:.10g} m = {rugosidade * 1000:.10g} mm")
+               f"ε = 3,71 × {diametro:.4g} × ({termo_atrito:.4g} − {termo_viscosidade:.4g}) "
+               f"= {rugosidade:.4g} m = {rugosidade * 1000:.4g} mm")
     return rugosidade * 1000
 
 
